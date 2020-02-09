@@ -1,0 +1,4 @@
+<launch>
+  <!-- <node name="Velocity_Controller" pkg="position_fight" type="testVelocityControl.py" output="screen" /> -->
+  <node name="Landing_controller" pkg="position_fight" type="Home_landing.py"/> 
+</launch>

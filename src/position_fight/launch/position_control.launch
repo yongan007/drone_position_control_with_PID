@@ -1,0 +1,4 @@
+<launch>
+  <node name="offboard_node" pkg="position_fight" type="px4_mavros_run.py" output="screen" />
+  <node name="commander_node" pkg="position_fight" type="commander.py"/> 
+</launch>
