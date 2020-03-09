@@ -44,6 +44,7 @@ def sub_and_pub():
 
     field_node = '/field'
     field = rospy.Publisher(field_node,Twist,queue_size=10)
+    
     pub = rospy.Publisher(topic_pub, TwistStamped, queue_size=10)
     rate = rospy.Rate(10) # 10hz
     
@@ -51,7 +52,7 @@ def sub_and_pub():
     global cur_pos
     global cur_vel
     target_pos = PoseStamped()
-    cur_pos print(obs0,obs1)= PoseStamped()
+    cur_pos = PoseStamped()
     cur_vel = TwistStamped()
     vel = TwistStamped()
     vel.header.frame_id = "map"
@@ -74,6 +75,7 @@ def obstr(msg):
     obs3 = msg.poses[3].position
     obs4 = msg.poses[4].position
     obs5 = msg.poses[5].position
+    print(msg.poses)
    
    
 def set_goal(msg):

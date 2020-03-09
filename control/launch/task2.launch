@@ -1,6 +1,6 @@
 <launch>
   <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" />
-  <node name="Velocity_Controller" pkg="control" type="control_task.py" output="screen" />
+  <node name="Velocity_Controller" pkg="control" type="control_task2.py" output="screen" />
   <node name="dynamic_confique" pkg="dynamic_confiq" type="server.py" output="screen" />
 
 </launch>
