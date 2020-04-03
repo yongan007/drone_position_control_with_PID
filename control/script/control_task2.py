@@ -56,27 +56,65 @@ def sub_and_pub():
     cur_vel = TwistStamped()
     vel = TwistStamped()
     vel.header.frame_id = "map"
-    global field
+    # global cur_x,cur_y,obs_x,obs_y
     field = [0, 0, 0, 0]
     while not rospy.is_shutdown():
         for i in range(10):
             if i <5 : mode = mode_srv(custom_mode="OFFBOARD") 
             else : pass 
         # print(field)
+        # 
         update_linear_vel(vel,field) 
-        #print(u)
         pub.publish(vel)
+        
         rate.sleep()
+        # nearest_obs(cur_x,cur_y,obs_x,obs_y)
+        rep_force(cur_x,cur_y,obs_x,obs_y,field)
+    
 
 def obstr(msg):
-    obs0 = msg.poses[0].position
-    obs1 = msg.poses[1].position
-    obs2 = msg.poses[2].position
-    obs3 = msg.poses[3].position
-    obs4 = msg.poses[4].position
-    obs5 = msg.poses[5].position
-    print(msg.poses)
-   
+    global obs_x,obs_y 
+    obs_x = [msg.poses[i].position.x for i in range(len(msg.poses))]
+    obs_y = [msg.poses[i].position.y for i in range(len(msg.poses))]
+    
+def nearest_obs(cur_x,cur_y,obs_x,obs_y):
+    dist = np.sqrt((obs_x[0]-cur_x)**2+(obs_y[0]-cur_y)**2)
+    idx = 0
+    for i in range(len(obs_x)):
+        d = np.sqrt((obs_x[i]-cur_x)**2+(obs_y[i]-cur_y)**2)
+        if d < dist:
+            dist = d 
+            idx = i
+            
+    print(dist,"::::",idx )
+    return dist, idx
+
+def rep_force(cur_x,cur_y,obs_x,obs_y,field):
+
+    tolerance = 0.7
+    k=0.4
+    r_field = 0.2
+    
+    dist_to_obs = np.sqrt((obs_x[0]-cur_x)**2+(obs_y[0]-cur_y)**2)
+    idx = 0
+    for i in range(len(obs_x)):
+        d = np.sqrt((obs_x[i]-cur_x)**2+(obs_y[i]-cur_y)**2)
+        if d < dist_to_obs:
+            dist_to_obs = d 
+            idx = i
+                
+    # dist_to_obs,idx = nearest_obs(cur_x,cur_y,obs_x,obs_y)
+
+    if (dist_to_obs - r_field) < tolerance:
+        field[0] = k*dist_to_obs / (dist_to_obs - r_field)**2 * (cur_x - obs_x[idx])
+        field[1] = k*dist_to_obs/ (dist_to_obs - r_field)**2 * (cur_x - obs_y[idx])
+    else:
+        field[0] = 0
+        field[1] = 0
+    print(field[0])
+ 
+
+
    
 def set_goal(msg):
     global target_pos 
@@ -84,8 +122,11 @@ def set_goal(msg):
     #print(target_pos)
     
 def set_cur_pose(msg):
-    global cur_pos
+    global cur_pos,cur_x, cur_y
     cur_pos = msg
+    cur_x = msg.pose.position.x
+    cur_y = msg.pose.position.y
+    
     # print(cur_pos)
     
 def set_cur_vel(msg):
@@ -98,12 +139,9 @@ def check_vel(msg):
     #print(msg)
     pass
 def update_fields(msg):
-    global field 
-    
-    field[0] = msg.doubles[0].value
-    field[1] = msg.doubles[1].value
-    field[2] = msg.doubles[2].value
-    field[3] = msg.doubles[3].value
+    # global field 
+    pass
+
     # print(ki.ints[0].value)
     # print("Kp ={} Kp={} Kp={} ".format(ki,kp,kd))
     # pass
@@ -133,7 +171,7 @@ def update_linear_vel(vel,field):
     Kp = 0.7
     Kd = 0.3
     goal_vel = 0.0
-    
+    # print(field[0])
     vel.twist.linear.x = Kp*(target_pos.pose.position.x-cur_pos.pose.position.x) + Kd*(goal_vel - cur_vel.twist.linear.x) + field[0]
     vel.twist.linear.y = Kp*(target_pos.pose.position.y-cur_pos.pose.position.y) + Kd*(goal_vel - cur_vel.twist.linear.y) + field[1]
     vel.twist.linear.z = Kp*(target_pos.pose.position.z-cur_pos.pose.position.z) + Kd*(goal_vel - cur_vel.twist.linear.z) + field[2]
@@ -158,4 +196,3 @@ def update_linear_vel(vel,field):
 
 if __name__ == '__main__':
     sub_and_pub()
-
